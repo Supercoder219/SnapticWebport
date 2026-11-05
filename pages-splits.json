@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "path": "index.pck",
+      "size": 222532628,
+      "parts": [
+        "large-assets/000_000.bin",
+        "large-assets/000_001.bin",
+        "large-assets/000_002.bin",
+        "large-assets/000_003.bin",
+        "large-assets/000_004.bin",
+        "large-assets/000_005.bin",
+        "large-assets/000_006.bin",
+        "large-assets/000_007.bin",
+        "large-assets/000_008.bin",
+        "large-assets/000_009.bin",
+        "large-assets/000_010.bin"
+      ],
+      "sha256": "061374f540ff74c292d3e6a8d48bfdbb8eebb371dc9f3730c0fd0412b5c925b9"
+    },
+    {
+      "path": "index.side.wasm",
+      "size": 42558150,
+      "parts": [
+        "large-assets/001_000.bin",
+        "large-assets/001_001.bin",
+        "large-assets/001_002.bin"
+      ],
+      "sha256": "ea8f67cf830470d396a4492ae74b57a0272ff38d30e71407534fa4da0fcd90a2"
+    }
+  ]
+}

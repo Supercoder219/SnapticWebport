@@ -1,0 +1,78 @@
+name: Deploy SNAPTIC
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out files
+        uses: actions/checkout@v6
+
+      - name: Reassemble large Godot assets
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import hashlib
+          import json
+          import shutil
+
+          output = Path('_site')
+          output.mkdir()
+          skip = {'.git', '.github', 'large-assets', '_site', 'pages-splits.json'}
+
+          for original in Path('.').rglob('*'):
+              if not original.is_file() or any(p in skip for p in original.parts):
+                  continue
+              target = output / original
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(original, target)
+
+          manifest = json.loads(Path('pages-splits.json').read_text(encoding='utf-8'))
+          for entry in manifest['files']:
+              target = output / entry['path']
+              target.parent.mkdir(parents=True, exist_ok=True)
+              digest = hashlib.sha256()
+              total = 0
+              with target.open('wb') as result:
+                  for part_name in entry['parts']:
+                      with Path(part_name).open('rb') as source:
+                          while True:
+                              block = source.read(1024 * 1024)
+                              if not block:
+                                  break
+                              result.write(block)
+                              digest.update(block)
+                              total += len(block)
+              if total != entry['size'] or digest.hexdigest() != entry['sha256']:
+                  raise RuntimeError(f"Asset failed verification: {entry['path']}")
+              print(f"Reassembled {entry['path']} ({total:,} bytes, SHA256 OK)")
+          PYTHON
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
